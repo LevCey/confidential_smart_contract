@@ -1,6 +1,6 @@
 # fhevm
 fhevmTemp
-hardhat.config.ts
+
 
 # directories
 .coverage_artifacts
@@ -24,3 +24,4 @@ tmp
 coverage.json
 pnpm-lock.yaml
 yarn.lock
+hardhat.config.ts
