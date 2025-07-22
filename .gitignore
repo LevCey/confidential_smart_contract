@@ -1,5 +1,6 @@
 # fhevm
 fhevmTemp
+hardhat.config.ts
 
 # directories
 .coverage_artifacts
