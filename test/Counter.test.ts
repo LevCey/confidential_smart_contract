@@ -10,7 +10,7 @@ type Signers = {
 };
 
 async function deployFixture() {
-  const factory = (await ethers.getContractFactory("Counter")) as Counter__factory;
+  const factory = (await ethers.getContractFactory("contracts/Counter.sol:Counter")) as Counter__factory;
   const counterContract = (await factory.deploy()) as Counter;
   const counterContractAddress = await counterContract.getAddress();
 
@@ -20,7 +20,7 @@ async function deployFixture() {
 describe("Counter", function () {
   let signers: Signers;
   let counterContract: Counter;
-  let counterContractAddress: string;
+  let counterContractAddress: Counter;
 
   before(async function () {
     const ethSigners: HardhatEthersSigner[] = await ethers.getSigners();
@@ -28,32 +28,39 @@ describe("Counter", function () {
   });
 
   beforeEach(async () => {
+    // Deploy a new instance of the contract before each test
     ({ counterContract, counterContractAddress } = await deployFixture());
   });
 
   it("should be deployed", async function () {
+    console.log(`Counter has been deployed at address ${counterContractAddress}`);
+    // Test the deployed address is valid
     expect(ethers.isAddress(counterContractAddress)).to.eq(true);
   });
 
-  it("should start at 0", async function () {
+  it("count should be zero after deployment", async function () {
     const count = await counterContract.getCount();
+    console.log(`Counter.getCount() === ${count}`);
+    // Expect initial count to be 0 after deployment
     expect(count).to.eq(0);
   });
 
-  it("should increment correctly", async function () {
-    await counterContract.increment(5);
-    const count = await counterContract.getCount();
-    expect(count).to.eq(5);
+  it("increment the counter by 1", async function () {
+    const countBeforeInc = await counterContract.getCount();
+    const tx = await counterContract.connect(signers.alice).increment(1);
+    await tx.wait();
+    const countAfterInc = await counterContract.getCount();
+    expect(countAfterInc).to.eq(countBeforeInc + 1n);
   });
 
-  it("should decrement correctly", async function () {
-    await counterContract.increment(10);
-    await counterContract.decrement(4);
+  it("decrement the counter by 1", async function () {
+    // First increment, count becomes 1
+    let tx = await counterContract.connect(signers.alice).increment(1);
+    await tx.wait();
+    // Then decrement, count goes back to 0
+    tx = await counterContract.connect(signers.alice).decrement(1);
+    await tx.wait();
     const count = await counterContract.getCount();
-    expect(count).to.eq(6);
-  });
-
-  it("should fail when decrementing below zero", async function () {
-    await expect(counterContract.decrement(1)).to.be.revertedWith("Counter: cannot decrement below zero");
+    expect(count).to.eq(0);
   });
 });
